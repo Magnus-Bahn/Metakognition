@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Metakognition</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #F6F6F6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px 16px 60px;
+    }
+    #app {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 22px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    h1 { font-size: 26px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+    h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header .emoji { font-size: 28px; margin-bottom: 4px; }
+    .header p { color: #999; font-size: 13px; }
+    .streak-box {
+      border-radius: 10px; padding: 10px 14px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;
+    }
+    .dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
+    .dot {
+      height: 10px; border-radius: 5px; border: none; background: #D0D0D0;
+      cursor: pointer; transition: all 0.3s ease; padding: 0;
+    }
+    .step-label {
+      font-size: 12px; color: #aaa; text-align: center;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+    }
+    .week-card { border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .week-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .week-subtitle { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 4px; }
+    .week-title { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .week-icon {
+      width: 40px; height: 40px; border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .week-desc { font-size: 14px; color: #555; line-height: 1.5; }
+    .today-done {
+      background: #F0FAF2; border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 16px; border-left: 4px solid #4A7C59;
+    }
+    .today-done-title { font-size: 13px; color: #4A7C59; font-weight: 600; }
+    .today-done-text { font-size: 13px; color: #666; margin-top: 4px; }
+    .btn-primary {
+      width: 100%; padding: 15px; border-radius: 12px; border: none;
+      color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
+      margin-bottom: 12px; font-family: inherit;
+    }
+    .btn-secondary {
+      width: 100%; padding: 13px; border-radius: 12px;
+      border: 1.5px solid #E0E0E0; background: #fff; color: #555;
+      font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
+    }
+    .progress-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 16px; }
+    .progress-label { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .progress-count { font-size: 13px; color: #666; }
+    .progress-bar-bg { background: #eee; border-radius: 4px; height: 6px; margin-top: 8px; }
+    .progress-bar-fill { height: 6px; border-radius: 4px; transition: width 0.5s; }
+    .progress-goal { font-size: 11px; color: #bbb; margin-top: 4px; }
+    .next-hint {
+      margin-top: 16px; background: #FFFBEA; border-radius: 12px;
+      padding: 12px 14px; border: 1px solid #F5E68A;
+    }
+    .next-hint-title { font-size: 13px; color: #8B7500; font-weight: 600; }
+    .next-hint-sub { font-size: 12px; color: #999; margin-top: 4px; }
+    .back-btn {
+      background: none; border: none; color: #888; font-size: 14px;
+      cursor: pointer; padding: 0 0 16px; font-family: inherit; display: block;
+    }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 20px; text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 10px;
+    }
+    .hint-text { font-size: 14px; color: #777; line-height: 1.6; margin-bottom: 20px; }
+    .field-group { margin-bottom: 16px; }
+    .field-label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
+    textarea {
+      width: 100%; border: 1.5px solid #E0E0E0; border-radius: 10px;
+      padding: 10px 12px; font-size: 14px; color: #333; resize: vertical;
+      font-family: inherit; line-height: 1.5; outline: none; transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: #999; }
+    .btn-save {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+      font-family: inherit; margin-top: 4px;
+    }
+    .saved-msg {
+      width: 100%; padding: 14px; border-radius: 12px; background: #4A7C59;
+      color: #fff; font-size: 15px; font-weight: 600; text-align: center; margin-top: 4px;
+    }
+    .entry-card {
+      background: #fff; border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 10px; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border-left-width: 4px; border-left-style: solid;
+    }
+    .entry-header { display: flex; justify-content: space-between; align-items: center; }
+    .entry-date { font-size: 13px; color: #888; }
+    .entry-toggle { font-size: 13px; }
+    .entry-preview { font-size: 14px; color: #333; margin-top: 4px; font-weight: 500; }
+    .entry-details { margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px; }
+    .entry-field { margin-bottom: 8px; }
+    .entry-field-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+    .entry-field-value { font-size: 14px; color: #333; margin-top: 2px; }
+    .empty-msg { color: #999; font-size: 14px; }
+    .loading-msg { color: #999; font-size: 14px; text-align: center; padding: 20px 0; }
+    .error-msg {
+      background: #FFF0F0; border-radius: 10px; padding: 12px 14px;
+      color: #C00; font-size: 13px; margin-bottom: 12px; border-left: 4px solid #C00;
+    }
+
+    /* SETUP SCREEN */
+    .setup-screen { text-align: center; }
+    .setup-screen .emoji { font-size: 40px; margin-bottom: 12px; }
+    .setup-screen h1 { margin-bottom: 8px; }
+    .setup-screen p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+    .setup-input {
+      width: 100%; border: 1.5px solid #E0E0E0; border-radius: 10px;
+      padding: 12px; font-size: 13px; font-family: monospace;
+      outline: none; margin-bottom: 8px; color: #333;
+    }
+    .setup-hint { font-size: 12px; color: #aaa; margin-bottom: 20px; text-align: left; }
+    .setup-btn {
+      width: 100%; padding: 15px; border-radius: 12px; border: none;
+      background: #4A7C59; color: #fff; font-size: 16px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+<div id="app"><div class="loading-msg">Indlæser...</div></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const GITHUB_USER = "Magnus-Bahn";
+const GITHUB_REPO = "Metakognition";
+const DATA_FILE   = "data.json";
+const TOKEN_KEY   = "meta_gh_token";
+const WEEK_KEY    = "meta_current_week";
+
+// ── WEEKS DATA ───────────────────────────────────────────────────────────────
+const WEEKS = [
+  {
+    title: "Læg mærke til", subtitle: "Uge 1–2", color: "#4A7C59", lightColor: "#EAF2EC",
+    description: "Ingen skrivning endnu. Du skal bare lære at stoppe op og lægge mærke til ét øjeblik fra dagen.",
+    prompt: "Hvad skete der i dag, som du lagde mærke til?",
+    hint: "Det kan være helt småt — en kollega der sagde noget, en situation der irriterede dig, eller noget der gik godt.",
+    icon: "👀",
+    labels: ["Beskriv øjeblikket kort"],
+    placeholders: ["F.eks: Mødet i dag gik skævt fordi..."],
+  },
+  {
+    title: "Føl efter", subtitle: "Uge 3–4", color: "#5B6FA6", lightColor: "#EEF0F8",
+    description: "Nu tilføjer vi ét ekstra lag: hvad følte du i det øjeblik? Ingen dom — bare observation.",
+    prompt: "Hvad skete der — og hvad mærkede du?",
+    hint: "Du behøver ikke analysere det. Bare beskriv hvad der skete og hvad du mærkede indeni.",
+    icon: "💭",
+    labels: ["Hvad skete der?", "Hvad mærkede du?"],
+    placeholders: ["Beskriv situationen...", "F.eks: irritation, usikkerhed, stolthed..."],
+  },
+  {
+    title: "Spørg hvorfor", subtitle: "Uge 5–6", color: "#8B5E3C", lightColor: "#F5EDE6",
+    description: "Nu begynder den egentlige refleksion. Du spørger dig selv: hvorfor reagerede jeg sådan?",
+    prompt: "Hvad skete der — hvad mærkede du — og hvorfor tror du, du reagerede sådan?",
+    hint: "Prøv at se dig selv udefra, som om du observerede en anden person. Hvad ville du tænke om dem?",
+    icon: "🔍",
+    labels: ["Hvad skete der?", "Hvad mærkede du?", "Hvorfor tror du, du reagerede sådan?"],
+    placeholders: ["Situationen...", "Følelsen...", "Din tolkning af hvorfor..."],
+  },
+  {
+    title: "Lær af det", subtitle: "Måned 2+", color: "#6A3D7A", lightColor: "#F2EBF5",
+    description: "Det fulde refleksionsloop. Du afslutter nu med at spørge: hvad vil jeg gøre anderledes?",
+    prompt: "Det fulde refleksionsloop",
+    hint: "Du er nu ved at bygge en reel vane. Selv én sætning per felt er nok — det vigtige er at du gør det.",
+    icon: "💡",
+    labels: ["Hvad skete der?", "Hvad mærkede du?", "Hvorfor reagerede du sådan?", "Hvad vil du gøre anderledes næste gang?"],
+    placeholders: ["Situationen...", "Følelsen...", "Din tolkning...", "Din læringspointe..."],
+  },
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  view: "loading",
+  token: localStorage.getItem(TOKEN_KEY) || "",
+  currentWeek: parseInt(localStorage.getItem(WEEK_KEY) || "0"),
+  entries: [],
+  fileSha: null,
+  fields: ["","","",""],
+  saved: false,
+  saving: false,
+  openEntries: {},
+  error: null,
+};
+
+// ── GITHUB API ───────────────────────────────────────────────────────────────
+async function ghGet() {
+  const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${DATA_FILE}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `token ${state.token}`, Accept: "application/vnd.github.v3+json" }
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Kunne ikke hente data fra GitHub (" + res.status + ")");
+  return res.json();
+}
+
+async function ghSave(entries) {
+  const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${DATA_FILE}`;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(entries, null, 2))));
+  const body = { message: "Tilføj refleksion", content };
+  if (state.fileSha) body.sha = state.fileSha;
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `token ${state.token}`,
+      Accept: "application/vnd.github.v3+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error("Kunne ikke gemme til GitHub (" + res.status + ")");
+  const data = await res.json();
+  state.fileSha = data.content.sha;
+}
+
+async function loadFromGitHub() {
+  const file = await ghGet();
+  if (!file) { state.entries = []; state.fileSha = null; return; }
+  state.fileSha = file.sha;
+  const json = decodeURIComponent(escape(atob(file.content.replace(/\n/g,""))));
+  state.entries = JSON.parse(json);
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function getTodayStr() {
+  return new Date().toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" });
+}
+function getTodayRaw() { return new Date().toISOString().split("T")[0]; }
+
+function getStreak(entries) {
+  const dates = [...new Set(entries.map(e => e.dateRaw))].sort().reverse();
+  if (!dates.length) return 0;
+  let streak = 0, d = new Date(); d.setHours(0,0,0,0);
+  for (let i = 0; i < dates.length; i++) {
+    const ed = new Date(dates[i]); ed.setHours(0,0,0,0);
+    if (Math.round((d - ed) / 86400000) === streak) { streak++; d = ed; } else break;
+  }
+  return streak;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById("app");
+  if (state.view === "setup")   { app.innerHTML = renderSetup();   attachSetupEvents();   return; }
+  if (state.view === "loading") { app.innerHTML = `<div class="loading-msg">⏳ Henter dine refleksioner...</div>`; return; }
+  if (state.view === "reflect") { app.innerHTML = renderReflect(); attachReflectEvents(); return; }
+  if (state.view === "history") { app.innerHTML = renderHistory(); attachHistoryEvents(); return; }
+  app.innerHTML = renderHome();
+  attachHomeEvents();
+}
+
+// SETUP
+function renderSetup() {
+  return `
+    <div class="setup-screen">
+      <div class="emoji">🧠</div>
+      <h1>Metakognition</h1>
+      <p>For at gemme dine refleksioner sikkert skal du indtaste dit GitHub token. Det gemmes kun på din enhed.</p>
+      <input class="setup-input" id="tokenInput" type="password" placeholder="github_pat_..." value="" />
+      <p class="setup-hint">🔒 Tokenet gemmes kun lokalt på din telefon og bruges til at gemme dine refleksioner i dit GitHub repo.</p>
+      <div id="setupError"></div>
+      <button class="setup-btn" id="setupBtn">Forbind og start</button>
+    </div>`;
+}
+
+function attachSetupEvents() {
+  document.getElementById("setupBtn").addEventListener("click", async () => {
+    const token = document.getElementById("tokenInput").value.trim();
+    if (!token) return;
+    state.token = token;
+    localStorage.setItem(TOKEN_KEY, token);
+    document.getElementById("setupBtn").textContent = "Forbinder...";
+    document.getElementById("setupBtn").disabled = true;
+    try {
+      await loadFromGitHub();
+      state.view = "home";
+      render();
+    } catch(e) {
+      document.getElementById("setupError").innerHTML = `<div class="error-msg">Kunne ikke forbinde. Tjek at tokenet er korrekt og har adgang til repo'et.</div>`;
+      document.getElementById("setupBtn").textContent = "Forbind og start";
+      document.getElementById("setupBtn").disabled = false;
+    }
+  });
+}
+
+// HOME
+function renderHome() {
+  const w = WEEKS[state.currentWeek];
+  const todayEntry = state.entries.find(e => e.dateRaw === getTodayRaw());
+  const weekEntries = state.entries.filter(e => e.weekIndex === state.currentWeek);
+  const streak = getStreak(state.entries);
+
+  let html = `
+    <div class="header">
+      <div class="emoji">🧠</div>
+      <h1>Metakognition</h1>
+      <p>Din daglige refleksion</p>
+    </div>`;
+
+  if (state.error) {
+    html += `<div class="error-msg">${state.error}</div>`;
+  }
+
+  if (streak > 0) {
+    html += `<div class="streak-box" style="background:${w.lightColor}; color:${w.color}">
+      <span style="font-size:18px">🔥</span>
+      <span>${streak} dag${streak !== 1 ? "e" : ""} i træk</span>
+    </div>`;
+  }
+
+  html += `<p class="step-label">Vælg trin</p><div class="dots">`;
+  WEEKS.forEach((wk, i) => {
+    const active = i === state.currentWeek;
+    html += `<button class="dot" data-week="${i}" style="width:${active?32:10}px; background:${active?wk.color:"#D0D0D0"}" title="${wk.title}"></button>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="week-card" style="background:${w.lightColor}">
+    <div class="week-card-top">
+      <div>
+        <div class="week-subtitle" style="color:${w.color}">${w.subtitle}</div>
+        <div class="week-title">${w.title}</div>
+      </div>
+      <div class="week-icon" style="background:${w.color}">${w.icon}</div>
+    </div>
+    <p class="week-desc">${w.description}</p>
+  </div>`;
+
+  if (todayEntry) {
+    const preview = (todayEntry.fields[0]?.value || "").slice(0, 80);
+    html += `<div class="today-done">
+      <div class="today-done-title">✓ Du har reflekteret i dag</div>
+      <div class="today-done-text">${preview}${preview.length >= 80 ? "..." : ""}</div>
+    </div>`;
+  } else {
+    html += `<button class="btn-primary" id="startBtn" style="background:${w.color}">Start dagens refleksion</button>`;
+  }
+
+  html += `<button class="btn-secondary" id="historyBtn">Se alle dine refleksioner${state.entries.length > 0 ? ` (${state.entries.length})` : ""}</button>`;
+
+  if (weekEntries.length > 0) {
+    const pct = Math.min(100, (weekEntries.length / 14) * 100);
+    html += `<div class="progress-section">
+      <div class="progress-label">Dit fremskridt på dette trin</div>
+      <div class="progress-count">${weekEntries.length} refleksion${weekEntries.length !== 1 ? "er" : ""} gemt</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%; background:${w.color}"></div></div>
+      <div class="progress-goal">Mål: 14 dage på dette trin</div>
+    </div>`;
+  }
+
+  if (state.currentWeek < 3 && weekEntries.length >= 10) {
+    html += `<div class="next-hint">
+      <div class="next-hint-title">🌱 Du er klar til næste trin!</div>
+      <div class="next-hint-sub">Tryk på den næste prik øverst for at gå videre.</div>
+    </div>`;
+  }
+
+  return html;
+}
+
+function attachHomeEvents() {
+  document.querySelectorAll(".dot").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.currentWeek = parseInt(btn.dataset.week);
+      localStorage.setItem(WEEK_KEY, state.currentWeek);
+      render();
+    });
+  });
+  const startBtn = document.getElementById("startBtn");
+  if (startBtn) startBtn.addEventListener("click", () => {
+    state.fields = ["","","",""];
+    state.saved = false;
+    state.view = "reflect";
+    render();
+  });
+  document.getElementById("historyBtn").addEventListener("click", () => {
+    state.view = "history";
+    render();
+  });
+}
+
+// REFLECT
+function renderReflect() {
+  const w = WEEKS[state.currentWeek];
+  let html = `
+    <button class="back-btn" id="backBtn">← Tilbage</button>
+    <span class="badge" style="background:${w.lightColor}; color:${w.color}">${w.subtitle}</span>
+    <h2 style="color:${w.color}; margin-bottom:8px">${w.prompt}</h2>
+    <p class="hint-text">${w.hint}</p>`;
+
+  w.labels.forEach((label, i) => {
+    html += `<div class="field-group">
+      <label class="field-label" style="color:${w.color}">${label}</label>
+      <textarea rows="${i===0?3:2}" id="field${i}" placeholder="${w.placeholders[i]}">${state.fields[i]||""}</textarea>
+    </div>`;
+  });
+
+  if (state.saved) {
+    html += `<div class="saved-msg">✓ Gemt!</div>`;
+  } else if (state.saving) {
+    html += `<div class="saved-msg" style="background:#888">Gemmer...</div>`;
+  } else {
+    html += `<button class="btn-save" id="saveBtn" style="background:${w.color}">Gem dagens refleksion</button>`;
+  }
+  return html;
+}
+
+function attachReflectEvents() {
+  const w = WEEKS[state.currentWeek];
+  document.getElementById("backBtn").addEventListener("click", () => { state.view = "home"; render(); });
+  w.labels.forEach((_, i) => {
+    const ta = document.getElementById("field" + i);
+    if (ta) ta.addEventListener("input", () => { state.fields[i] = ta.value; });
+  });
+  const saveBtn = document.getElementById("saveBtn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      const fieldData = w.labels.map((label, i) => ({ label, value: state.fields[i] || "" }));
+      if (!fieldData[0].value.trim()) return;
+      state.saving = true;
+      state.error = null;
+      render();
+      try {
+        const entry = {
+          date: getTodayStr(),
+          dateRaw: getTodayRaw(),
+          weekIndex: state.currentWeek,
+          weekTitle: w.title,
+          fields: fieldData,
+        };
+        const updated = [entry, ...state.entries];
+        await ghSave(updated);
+        state.entries = updated;
+        state.saving = false;
+        state.saved = true;
+        render();
+        setTimeout(() => {
+          state.saved = false;
+          state.view = "home";
+          state.fields = ["","","",""];
+          render();
+        }, 1500);
+      } catch(e) {
+        state.saving = false;
+        state.error = "Kunne ikke gemme: " + e.message;
+        state.view = "home";
+        render();
+      }
+    });
+  }
+}
+
+// HISTORY
+function renderHistory() {
+  let html = `
+    <button class="back-btn" id="backBtn">← Tilbage</button>
+    <h2 style="margin-bottom:16px">Dine refleksioner</h2>`;
+
+  if (!state.entries.length) {
+    html += `<p class="empty-msg">Du har ikke gemt noget endnu. Start med din første refleksion!</p>`;
+  } else {
+    state.entries.forEach((entry, i) => {
+      const color = WEEKS[entry.weekIndex]?.color || "#555";
+      const open = state.openEntries[i];
+      const preview = (entry.fields[0]?.value || "").slice(0, 60);
+      html += `<div class="entry-card" data-idx="${i}" style="border-left-color:${color}">
+        <div class="entry-header">
+          <span class="entry-date">${entry.date}</span>
+          <span class="entry-toggle" style="color:${color}">${open ? "▲ Skjul" : "▼ Vis"}</span>
+        </div>
+        <div class="entry-preview">${preview}${(entry.fields[0]?.value||"").length > 60 ? "..." : ""}</div>`;
+      if (open) {
+        html += `<div class="entry-details">`;
+        entry.fields.forEach(f => {
+          html += `<div class="entry-field">
+            <div class="entry-field-label">${f.label}</div>
+            <div class="entry-field-value">${f.value}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+  }
+  return html;
+}
+
+function attachHistoryEvents() {
+  document.getElementById("backBtn").addEventListener("click", () => { state.view = "home"; render(); });
+  document.querySelectorAll(".entry-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const idx = parseInt(card.dataset.idx);
+      state.openEntries[idx] = !state.openEntries[idx];
+      render();
+    });
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+async function init() {
+  if (!state.token) {
+    state.view = "setup";
+    render();
+    return;
+  }
+  state.view = "loading";
+  render();
+  try {
+    await loadFromGitHub();
+    state.view = "home";
+  } catch(e) {
+    state.error = "Kunne ikke forbinde til GitHub. Tjek din internetforbindelse.";
+    state.view = "home";
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
